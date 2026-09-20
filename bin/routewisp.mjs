@@ -177,6 +177,25 @@ const commands = {
     const data = await call(conn, "GET", "/api/combos");
     for (const c of data.combos || data || []) console.log(`${c.name}  ${(c.models || []).join(", ")}`);
   },
+
+  async quota({ flags }) {
+    const conn = resolveConn(flags);
+    const data = await call(conn, "GET", "/api/quota");
+    for (const c of data.connections || []) {
+      console.log(`\n${c.provider} — ${c.name}`);
+      if (c.usage?.error || c.usage?.message) {
+        console.log(`  ${c.usage.error || c.usage.message}`);
+        continue;
+      }
+      for (const [name, q] of Object.entries(c.usage?.quotas || {})) {
+        const pct = q.remainingPercentage != null
+          ? `${q.remainingPercentage.toFixed(1)}% left`
+          : q.remaining != null ? `${q.remaining.toFixed(2)}/${q.total} left` : "";
+        const reset = q.resetAt ? `resets ${new Date(q.resetAt).toLocaleString()}` : "";
+        console.log(`  ${(q.displayName || name).padEnd(28)} ${pct.padEnd(14)} ${reset}`);
+      }
+    }
+  },
 };
 
 async function main() {
@@ -185,7 +204,7 @@ async function main() {
   const argv = commands[`${cmd}:${sub}`] ? rest : [sub, ...rest].filter(Boolean);
   const fn = commands[key];
   if (!fn) {
-    console.log("Usage: routewisp <config set|keys create|keys list|providers add|providers list|providers login|models|combos add|combos list> [args] [--api-url URL] [--token TOKEN]");
+    console.log("Usage: routewisp <config set|keys create|keys list|providers add|providers list|providers login|models|quota|combos add|combos list> [args] [--api-url URL] [--token TOKEN]");
     process.exit(1);
   }
   try {
