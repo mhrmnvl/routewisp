@@ -86,6 +86,54 @@ Models:   ag/<model>          → Antigravity  (see `routewisp models`)
 registry (unofficial use of the Antigravity IDE's internal API) — works, but
 could change or get an account flagged without notice.
 
+## 4. Check quota
+
+```bash
+node bin/routewisp.mjs quota
+```
+Per-model remaining % and reset time for every connected account, straight
+from each provider's real usage API (`open-sse/services/usage.js` — the same
+fetchers upstream's dashboard used, just not behind a dashboard anymore).
+
+## 5. Hardening for a public VPS
+
+**Rate limit** — `/v1/*`/`/v1beta/*` are limited per API key (fixed window,
+`RATE_LIMIT_PER_MINUTE`, default 60/min, `0` disables). In-memory, so it
+resets on restart and doesn't share state across more than one process —
+fine for the single-process way this runs.
+
+**Run under systemd, not a background shell** — `deploy/routewisp.service`.
+Adjust `User`/`WorkingDirectory`/the bun path to match your VPS, put your real
+env vars in `/opt/routewisp/.env`, then:
+```bash
+sudo cp deploy/routewisp.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now routewisp
+```
+
+**TLS** — routewisp itself speaks plain HTTP. Put a reverse proxy in front on
+the VPS. `deploy/Caddyfile` is the whole config if you have a domain pointed
+at the VPS (Caddy provisions Let's Encrypt automatically):
+```bash
+sudo caddy run --config deploy/Caddyfile
+```
+No domain yet? Either keep it plain HTTP and firewall port 20128 to known
+client IPs only, or use `tls internal` in the Caddyfile for a self-signed
+cert (clients need to trust it explicitly).
+
+**Backup** — `~/.routewisp` (or `$DATA_DIR`) holds every provider connection,
+OAuth token, and API key. Nothing backs it up automatically.
+```bash
+./deploy/backup.sh                       # -> ~/routewisp-backups/routewisp-<timestamp>.tar.gz
+```
+Add to cron for daily backups (`crontab -e`):
+```
+17 3 * * * /opt/routewisp/deploy/backup.sh
+```
+It's a plain `tar` of the SQLite files while the server may still be
+writing — safe enough for a daily snapshot, but for a guaranteed-consistent
+backup stop the service first (`systemctl stop routewisp`), back up, restart.
+
 ---
 
 ## What's in this build vs. the first pass

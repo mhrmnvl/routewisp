@@ -1,0 +1,17 @@
+[Unit]
+Description=routewisp
+After=network.target
+
+[Service]
+Type=simple
+User=routewisp
+WorkingDirectory=/opt/routewisp
+EnvironmentFile=/opt/routewisp/.env
+ExecStart=/home/routewisp/.bun/bin/bun server.js
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
