@@ -1,0 +1,25 @@
+# dependencies
+/node_modules
+tests/node_modules
+
+# env — never commit real secrets
+.env
+.env.*
+!.env.example
+
+# runtime data
+/data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# logs
+*.log
+
+# editor / OS
+.idea/
+.DS_Store
+*.pem
+
+# bun
+bun-debug.log*

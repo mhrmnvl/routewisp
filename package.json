@@ -1,0 +1,23 @@
+{
+  "name": "routewisp",
+  "version": "0.5.81",
+  "description": "Minimal AI provider router (Antigravity, CommandCode) — forked from 9router, no dashboard, no Next.js",
+  "private": true,
+  "type": "module",
+  "bin": { "routewisp": "./bin/routewisp.mjs" },
+  "scripts": {
+    "start": "bun server.js",
+    "dev": "bun --watch server.js"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "confbox": "^0.2.4",
+    "jose": "^6.1.3",
+    "node-machine-id": "^1.1.12",
+    "open": "^11.0.0",
+    "ora": "^9.1.0",
+    "socks-proxy-agent": "^8.0.5",
+    "undici": "^7.19.2",
+    "uuid": "^13.0.0"
+  }
+}
