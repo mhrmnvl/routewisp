@@ -31,10 +31,11 @@ npx vitest run unit/gemini-3.7-antigravity.test.js   # single file
 ```
 Inherited from upstream, not audited file-by-file after the fork: expect some
 red beyond what upstream's own `tests/__baseline__/known-fails.txt` catalogues.
-Known additional red here: `unit/gemini-3.{6,7,8}-integration.test.js` (they
-exercise `src/mitm/config.js`'s `extractModel()`, which no longer exists —
-MITM was removed). The translator/chat-flow tests that matter for
-antigravity/commandcode pass; that's what's been verified.
+(`unit/gemini-3.{6,7,8}-integration.test.js` were deleted — they only
+exercised `src/mitm/config.js`'s `extractModel()`, which no longer exists.)
+The translator/chat-flow tests that matter for antigravity/commandcode pass,
+and the full `/v1/chat/completions` path (both streaming and not) has been
+verified live against real antigravity + commandcode accounts.
 
 ## Architecture
 

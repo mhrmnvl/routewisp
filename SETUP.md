@@ -110,14 +110,17 @@ full list), plus this pass:
   admin REST endpoints, plus a local OAuth-redirect catcher so `providers
   login` doesn't need an SSH tunnel.
 
-## Known gap
+## Verification
 
-`src/mitm/config.js`'s `extractModel()` (URL-pattern-based model detection for
-intercepted IDE traffic) is gone along with `src/mitm/`, so
-`tests/unit/gemini-3.{6,7,8}-integration.test.js` fail to import — they test
-that MITM-only helper, not the actual request path. The 49 tests that exercise
-the real translator/chat flow (including the ones covering antigravity) still
-pass; see the $ref fix note below for what was verified.
+The 49 tests exercising the real translator/chat flow (including antigravity)
+pass; see the $ref fix note below. Beyond that, the full request path has been
+verified live: non-streaming and streaming `/v1/chat/completions` against real
+antigravity and commandcode accounts, multi-account rotation (2 antigravity
+logins on the same router), and `/api/quota`.
+
+(`tests/unit/gemini-3.{6,7,8}-integration.test.js` were removed — they only
+tested `src/mitm/config.js`'s `extractModel()`, which doesn't exist in this
+fork.)
 
 ## Bug fix carried over from the first pass
 
