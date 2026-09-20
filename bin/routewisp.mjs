@@ -70,8 +70,13 @@ function waitForCallback(port) {
   return new Promise((resolve, reject) => {
     const server = createServer((req, res) => {
       const url = new URL(req.url, `http://localhost:${port}`);
-      res.writeHead(200, { "Content-Type": "text/plain" });
-      res.end("Done — you can close this tab.");
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(`<!doctype html>
+<html><body style="font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh">
+<div style="text-align:center;padding:2rem">
+  <p style="font-size:1.25rem">Done — you can close this tab.</p>
+</div>
+</body></html>`);
       server.close();
       const error = url.searchParams.get("error");
       if (error) return reject(new Error(url.searchParams.get("error_description") || error));
