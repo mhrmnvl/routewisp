@@ -97,6 +97,15 @@ fetchers upstream's dashboard used, just not behind a dashboard anymore).
 
 ## 5. Hardening for a public VPS
 
+**Fastest path**: `./deploy/install-vps.sh` — an interactive wizard that SSHes
+into your VPS and does steps below for you (installs Bun, clones this repo,
+writes `.env` with generated secrets, smoke-tests, wires systemd, optionally
+TLS via Caddy and a daily backup cron). Needs SSH key auth to the VPS already
+working; asks before anything it can't undo. Safe to re-run — it remembers
+answers in `.vps-wizard.env` (gitignored, holds real secrets, don't commit it).
+
+The manual version of each of its steps:
+
 **Rate limit** — `/v1/*`/`/v1beta/*` are limited per API key (fixed window,
 `RATE_LIMIT_PER_MINUTE`, default 60/min, `0` disables). In-memory, so it
 resets on restart and doesn't share state across more than one process —
