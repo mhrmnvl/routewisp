@@ -86,6 +86,24 @@ Models:   ag/<model>          → Antigravity  (see `routewisp models`)
 registry (unofficial use of the Antigravity IDE's internal API) — works, but
 could change or get an account flagged without notice.
 
+### OpenCode
+
+```bash
+node bin/routewisp.mjs opencode install            # global: ~/.config/opencode/
+node bin/routewisp.mjs opencode install --project  # repo: ./opencode.json + ./.opencode/plugin/
+```
+
+Writes the `routewisp` provider (every model from `/v1/models`,
+`@ai-sdk/openai-compatible`) and copies `deploy/opencode/routewisp-effort.js`
+next to it. The plugin turns an OpenCode `--variant` (`none, low, medium, high,
+xhigh, max`) into `reasoning_effort` for `cmc/*` models; antigravity picks its
+effort from the model id instead (`ag/gemini-3.8-flash-high`). Existing
+providers and config keys are left alone, and an `apiKey` already working in the
+config is kept; otherwise `--api-key` is written as-is, while `ROUTEWISP_API_KEY`
+and freshly created keys are stored as `{env:ROUTEWISP_API_KEY}` — export the
+printed key before restarting OpenCode. `--project` installs land in the repo, so
+gitignore `opencode.json` and `.opencode/`.
+
 ## 4. Check quota
 
 ```bash

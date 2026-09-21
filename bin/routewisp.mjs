@@ -1,11 +1,40 @@
 #!/usr/bin/env node
 import { createServer } from "node:http";
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import open from "open";
 
 const CONFIG_PATH = join(homedir(), ".routewisp", "cli.json");
+
+const OPENCODE_PLUGIN_SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "deploy", "opencode", "routewisp-effort.js");
+const OPENCODE_VARIANTS = ["none", "low", "medium", "high", "xhigh", "max"];
+
+function opencodeTargets(project) {
+  if (project) {
+    return {
+      configPath: join(process.cwd(), "opencode.json"),
+      pluginPath: join(process.cwd(), ".opencode", "plugin", "routewisp-effort.js"),
+    };
+  }
+  const configDir = join(process.env.XDG_CONFIG_HOME || join(homedir(), ".config"), "opencode");
+  return {
+    configPath: join(configDir, "opencode.json"),
+    pluginPath: join(configDir, "plugins", "routewisp-effort.js"),
+  };
+}
+
+function buildOpencodeModels(modelIds) {
+  const variants = Object.fromEntries(OPENCODE_VARIANTS.map((v) => [v, { reasoningEffort: v }]));
+  const models = {};
+  for (const id of modelIds) {
+    models[id] = id.startsWith("cmc/")
+      ? { interleaved: { field: "reasoning_content" }, variants }
+      : {};
+  }
+  return models;
+}
 
 function loadConfig() {
   try {
@@ -178,6 +207,59 @@ const commands = {
     for (const c of data.combos || data || []) console.log(`${c.name}  ${(c.models || []).join(", ")}`);
   },
 
+  async "opencode:install"({ flags }) {
+    const conn = resolveConn(flags);
+    const project = flags.project === true;
+
+    const modelsData = await call(conn, "GET", "/v1/models");
+    const modelIds = (modelsData.data || []).map((m) => m.id).filter(Boolean);
+    if (modelIds.length === 0) throw new Error("gateway returned no models — add a provider first (routewisp providers login/add)");
+
+    const { configPath, pluginPath } = opencodeTargets(project);
+    let cfg = {};
+    try { cfg = JSON.parse(readFileSync(configPath, "utf8")); } catch {}
+    let prevKey = cfg.provider?.routewisp?.options?.apiKey;
+    if (prevKey) {
+      try {
+        const keysData = await call(conn, "GET", "/api/keys");
+        if (!(keysData.keys || []).some((k) => k.isActive && k.key === prevKey)) prevKey = undefined;
+      } catch {}
+    }
+
+    const explicitKey = flags["api-key"] || process.env.ROUTEWISP_API_KEY || "";
+    let apiKey = explicitKey || prevKey || "";
+    let created = false;
+    if (!apiKey) {
+      const data = await call(conn, "POST", "/api/keys", { name: "opencode" });
+      apiKey = data.key;
+      created = true;
+    }
+    const useEnvRef = !flags["api-key"] && (!!process.env.ROUTEWISP_API_KEY || !prevKey);
+
+    cfg.provider = cfg.provider || {};
+    cfg.provider.routewisp = {
+      npm: "@ai-sdk/openai-compatible",
+      name: "routewisp",
+      options: {
+        baseURL: `${conn.apiUrl}/v1`,
+        apiKey: useEnvRef ? "{env:ROUTEWISP_API_KEY}" : apiKey,
+      },
+      models: buildOpencodeModels(modelIds),
+    };
+    mkdirSync(dirname(configPath), { recursive: true });
+    writeFileSync(configPath, JSON.stringify(cfg, null, 2) + "\n");
+    mkdirSync(dirname(pluginPath), { recursive: true });
+    copyFileSync(OPENCODE_PLUGIN_SRC, pluginPath);
+
+    console.log(`Provider + ${modelIds.length} models → ${configPath}`);
+    console.log(`Plugin → ${pluginPath}`);
+    if (created) console.log(`\nCreated API key: ${apiKey}`);
+    console.log(`\nNext:`);
+    if (useEnvRef) console.log(`  export ROUTEWISP_API_KEY=${apiKey}`);
+    console.log(`  restart opencode`);
+    if (project) console.log(`  gitignore: opencode.json .opencode/ (so the key reference / local plugin never lands in the repo)`);
+  },
+
   async quota({ flags }) {
     const conn = resolveConn(flags);
     const data = await call(conn, "GET", "/api/quota");
@@ -204,7 +286,7 @@ async function main() {
   const argv = commands[`${cmd}:${sub}`] ? rest : [sub, ...rest].filter(Boolean);
   const fn = commands[key];
   if (!fn) {
-    console.log("Usage: routewisp <config set|keys create|keys list|providers add|providers list|providers login|models|quota|combos add|combos list> [args] [--api-url URL] [--token TOKEN]");
+    console.log("Usage: routewisp <config set|keys create|keys list|providers add|providers list|providers login|models|quota|combos add|combos list|opencode install [--global|--project] [--api-key sk-...]> [args] [--api-url URL] [--token TOKEN]");
     process.exit(1);
   }
   try {
