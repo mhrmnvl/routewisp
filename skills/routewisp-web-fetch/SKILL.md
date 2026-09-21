@@ -35,7 +35,7 @@ IDs end in `/fetch` (e.g. `firecrawl/fetch`, `jina/fetch`). `fetch-combo` chains
 curl -X POST $NINEROUTER_URL/v1/web/fetch \
   -H "Authorization: Bearer $NINEROUTER_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"jina-reader","url":"https://9router.com","format":"markdown"}'
+  -d '{"model":"jina-reader","url":"https://example.com","format":"markdown"}'
 ```
 
 ### Exa

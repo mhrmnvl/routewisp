@@ -22,13 +22,10 @@ Verify: `curl $NINEROUTER_URL/api/health` → `{"ok":true}`
 
 ```bash
 curl $NINEROUTER_URL/v1/models                  # chat/LLM (default)
-curl $NINEROUTER_URL/v1/models/image            # image-gen
-curl $NINEROUTER_URL/v1/models/tts              # text-to-speech
-curl $NINEROUTER_URL/v1/models/embedding        # embeddings
 curl $NINEROUTER_URL/v1/models/web              # web search + fetch (entries have `kind` field)
-curl $NINEROUTER_URL/v1/models/stt              # speech-to-text
-curl $NINEROUTER_URL/v1/models/image-to-text    # vision
 ```
+
+Image/TTS/STT/embeddings endpoints aren't in this fork — see SETUP.md.
 
 Use `data[].id` as `model` field in requests. Combos appear with `owned_by:"combo"`.
 
@@ -44,18 +41,16 @@ Response shape:
 
 When the user needs a specific capability, fetch that skill's `SKILL.md` from its raw URL:
 
-| Capability | Raw URL |
+| Capability | File |
 |---|---|
-| Chat / code-gen | https://raw.githubusercontent.com/decolua/9router/refs/heads/master/skills/9router-chat/SKILL.md |
-| Image generation | https://raw.githubusercontent.com/decolua/9router/refs/heads/master/skills/9router-image/SKILL.md |
-| Text-to-speech | https://raw.githubusercontent.com/decolua/9router/refs/heads/master/skills/9router-tts/SKILL.md |
-| Speech-to-text | https://raw.githubusercontent.com/decolua/9router/refs/heads/master/skills/9router-stt/SKILL.md |
-| Embeddings | https://raw.githubusercontent.com/decolua/9router/refs/heads/master/skills/9router-embeddings/SKILL.md |
-| Web search | https://raw.githubusercontent.com/decolua/9router/refs/heads/master/skills/9router-web-search/SKILL.md |
-| Web fetch (URL → markdown) | https://raw.githubusercontent.com/decolua/9router/refs/heads/master/skills/9router-web-fetch/SKILL.md |
+| Web search | `skills/routewisp-web-search/SKILL.md` |
+| Web fetch (URL → markdown) | `skills/routewisp-web-fetch/SKILL.md` |
+
+Image/video/TTS/STT/embeddings skills from upstream were dropped along with
+those endpoints.
 
 ## Errors
 
-- 401 → set/refresh `NINEROUTER_KEY` (Dashboard → Keys)
+- 401 → set/refresh `NINEROUTER_KEY` via `node bin/routewisp.mjs keys create <name>`
 - 400 `Invalid model format` → check `model` exists in `/v1/models/<kind>`
 - 503 `All accounts unavailable` → wait `retry-after` or add another provider account

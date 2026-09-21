@@ -35,7 +35,7 @@ IDs end in `/search` (e.g. `tavily/search`). Combos (`owned_by:"combo"`) chain p
 curl -X POST $NINEROUTER_URL/v1/search \
   -H "Authorization: Bearer $NINEROUTER_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"tavily","query":"9Router open source","max_results":5}'
+  -d '{"model":"tavily","query":"AI routing gateways","max_results":5}'
 ```
 
 JS:
@@ -74,7 +74,7 @@ Xquik responses include provider pagination and credit usage:
 ```json
 {
   "provider": "tavily",
-  "query": "9Router open source",
+  "query": "AI routing gateways",
   "results": [
     {
       "title": "...", "url": "https://...", "display_url": "github.com/...",
